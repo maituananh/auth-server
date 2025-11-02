@@ -1,44 +1,92 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.7'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id("org.openrewrite.rewrite") version("latest.release")
+    id "com.diffplug.spotless" version "6.25.0"
 }
 
 group = 'com.vn.anhmt'
 version = '0.0.1-SNAPSHOT'
 description = 'Authentication server, support login by oauth2'
 
+spotless {
+    java {
+        target 'src/**/*.java'
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+}
+
+rewrite {
+//    activeRecipe("com.vn.anhmt.authentication.configuration")
+    activeRecipe("com.vn.anhmt.authentication")
+    activeRecipe(
+            "org.openrewrite.java.spring.boot3.SpringBootProperties_3_5",
+            "org.openrewrite.java.spring.boot3.ActuatorEndpointSanitization",
+            "org.openrewrite.java.spring.boot3.EnableVirtualThreads",
+            "org.openrewrite.java.spring.boot3.ReplaceMockBeanAndSpyBean",
+//            "org.openrewrite.java.spring.boot3.ReplaceStringLiteralsWithConstants",
+            "org.openrewrite.java.spring.NoAutowiredOnConstructor",
+            "org.openrewrite.java.spring.NoRequestMappingAnnotation",
+            "org.openrewrite.java.spring.security6.ApplyToWithLambdaDsl",
+            "org.openrewrite.java.spring.security6.oauth2.server.resource.OAuth2ResourceServerLambdaDsl",
+            "org.openrewrite.yaml.cleanup.RemoveUnused",
+            "org.openrewrite.java.format.AutoFormat",
+            "org.openrewrite.java.format.NormalizeLineBreaks",
+            "org.openrewrite.java.format.NormalizeTabsOrSpaces",
+            "org.openrewrite.java.format.RemoveTrailingWhitespace",
+            "org.openrewrite.staticanalysis.CommonStaticAnalysis"
+    )
+    setExportDatatables(true)
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.liquibase:liquibase-core'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.postgresql:postgresql'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // database
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.liquibase:liquibase-core'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // open rewrite
+    rewrite("org.openrewrite.recipe:rewrite-spring:6.17.0")
+    rewrite("org.openrewrite:rewrite-java:8.64.0")
+    rewrite 'org.openrewrite.recipe:rewrite-static-analysis:2.20.0'
+
+    // test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
