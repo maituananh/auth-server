@@ -2,8 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.7'
     id 'io.spring.dependency-management' version '1.1.7'
-    id("org.openrewrite.rewrite") version("latest.release")
-    id "com.diffplug.spotless" version "6.25.0"
+    id "com.diffplug.spotless" version "8.0.0"
 }
 
 group = 'com.vn.anhmt'
@@ -12,7 +11,9 @@ description = 'Authentication server, support login by oauth2'
 
 spotless {
     java {
+        palantirJavaFormat()
         target 'src/**/*.java'
+        targetExclude '**/build/generated/**'
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
@@ -35,27 +36,12 @@ repositories {
     mavenCentral()
 }
 
-rewrite {
-//    activeRecipe("com.vn.anhmt.authentication.configuration")
-    activeRecipe("com.vn.anhmt.authentication")
-    activeRecipe(
-            "org.openrewrite.java.spring.boot3.SpringBootProperties_3_5",
-            "org.openrewrite.java.spring.boot3.ActuatorEndpointSanitization",
-            "org.openrewrite.java.spring.boot3.EnableVirtualThreads",
-            "org.openrewrite.java.spring.boot3.ReplaceMockBeanAndSpyBean",
-//            "org.openrewrite.java.spring.boot3.ReplaceStringLiteralsWithConstants",
-            "org.openrewrite.java.spring.NoAutowiredOnConstructor",
-            "org.openrewrite.java.spring.NoRequestMappingAnnotation",
-            "org.openrewrite.java.spring.security6.ApplyToWithLambdaDsl",
-            "org.openrewrite.java.spring.security6.oauth2.server.resource.OAuth2ResourceServerLambdaDsl",
-            "org.openrewrite.yaml.cleanup.RemoveUnused",
-            "org.openrewrite.java.format.AutoFormat",
-            "org.openrewrite.java.format.NormalizeLineBreaks",
-            "org.openrewrite.java.format.NormalizeTabsOrSpaces",
-            "org.openrewrite.java.format.RemoveTrailingWhitespace",
-            "org.openrewrite.staticanalysis.CommonStaticAnalysis"
-    )
-    setExportDatatables(true)
+compileJava {
+    dependsOn(tasks.spotlessApply)
+}
+
+tasks.check {
+    dependsOn(tasks.spotlessCheck)
 }
 
 dependencies {
@@ -66,25 +52,32 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
 
     // database
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.liquibase:liquibase-core'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // open rewrite
-    rewrite("org.openrewrite.recipe:rewrite-spring:6.17.0")
-    rewrite("org.openrewrite:rewrite-java:8.64.0")
-    rewrite 'org.openrewrite.recipe:rewrite-static-analysis:2.20.0'
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
 
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers:3.5.7'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'com.redis.testcontainers:testcontainers-redis:1.6.4'
 }
 
 tasks.named('test') {
