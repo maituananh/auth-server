@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -25,7 +26,9 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
@@ -35,13 +38,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfiguration {
 
     private static final String[] WHITE_LIST = {
-        "/api/auth/token",
-        "/api/auth/refresh-token",
-        "/v3/api-docs/**",
-        "/swagger-ui/**",
-        "/api-docs.yaml",
-        "/api-docs",
-        "/login/oauth2/code/client"
+        "/api/auth/token", "/api/auth/refresh-token", "/v3/api-docs/**", "/swagger-ui/**", "/api-docs.yaml", "/api-docs"
     };
 
     private final InterceptorConfiguration interceptorConfiguration;
@@ -50,12 +47,22 @@ public class SecurityConfiguration {
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                OAuth2AuthorizationServerConfigurer.authorizationServer();
 
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-                .with(authorizationServerConfigurer, Customizer.withDefaults());
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
-        http.exceptionHandling(e -> e.accessDeniedHandler((req, res, ex) -> ex.printStackTrace()));
+                .with(
+                        authorizationServerConfigurer,
+                        authorizationServer ->
+                                authorizationServer.oidc(Customizer.withDefaults()) // Enable OpenID Connect 1.0
+                        )
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                // Redirect to the login page when not authenticated from the
+                // authorization endpoint
+                .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
+                        new LoginUrlAuthenticationEntryPoint("/login"),
+                        new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
+
         return http.build();
     }
 
@@ -108,7 +115,10 @@ public class SecurityConfiguration {
                         .refreshTokenTimeToLive(Duration.ofHours(2))
                         .reuseRefreshTokens(false)
                         .build())
-                .clientSettings(ClientSettings.builder().requireProofKey(false).build())
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(true)
+                        .requireProofKey(false)
+                        .build())
                 .build();
 
         return new InMemoryRegisteredClientRepository(registeredClient);
