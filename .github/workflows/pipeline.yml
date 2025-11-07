@@ -1,0 +1,55 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Validate PR Title
+        uses: kontrolplane/pull-request-title-validator@v1.5.0 # Replace with your chosen action
+        with:
+          types: "feat,fix,chore,docs,style,refactor,perf,test,build,ci"
+          scopes: ".*" # Allow any scope, or define specific ones
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login Dockerhub
+        env:
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+          DOCKER_IMAGE_NAME: ${{secrets.DOCKER_IMAGE_NAME}}
+        run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}:latest
+
+      - name: Push to Dockerhub
+        run: docker push ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}:latest
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Pull Docker image
+        run: docker pull ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}:latest
+
+      - name: Delete old container if existed
+        run: docker rm -f ${{secrets.DOCKER_CONTAINER_NAME}} || true
+
+      - name: Run Docker container
+        run: |
+          docker run -d -p ${{secrets.SERVER_PORT}}:${{secrets.SERVER_PORT}} \
+            -e DB_HOST=${{ secrets.DB_HOST }} \
+            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            --name ${{secrets.DOCKER_CONTAINER_NAME}} ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}
