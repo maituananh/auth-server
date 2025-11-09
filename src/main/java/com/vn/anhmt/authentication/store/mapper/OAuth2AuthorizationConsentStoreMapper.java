@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.util.StringUtils;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -26,8 +25,7 @@ public class OAuth2AuthorizationConsentStoreMapper {
         return entity;
     }
 
-    public static OAuth2AuthorizationConsent toObject(
-            OAuth2AuthorizationConsentEntity entity, RegisteredClient registeredClient) {
+    public static OAuth2AuthorizationConsent toObject(OAuth2AuthorizationConsentEntity entity) {
         String principalName = entity.getPrincipalName();
         OAuth2AuthorizationConsent.Builder builder =
                 OAuth2AuthorizationConsent.withId(entity.getRegisteredClientId(), principalName);

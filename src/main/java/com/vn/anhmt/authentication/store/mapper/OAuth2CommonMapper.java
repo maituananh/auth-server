@@ -8,6 +8,7 @@ import com.vn.anhmt.authentication.configuration.custom.user.UserDetailsCustom;
 import com.vn.anhmt.authentication.configuration.custom.user.UserDetailsCustomMixin;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,10 +17,10 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 
-@Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OAuth2CommonMapper {
 
+    @Getter
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     static {
@@ -27,6 +28,7 @@ public class OAuth2CommonMapper {
         List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
 
         objectMapper.addMixIn(UserDetailsCustom.class, UserDetailsCustomMixin.class);
+        objectMapper.addMixIn(UUID.class, UserDetailsCustomMixin.class);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.registerModules(securityModules);
         objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());

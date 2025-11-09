@@ -68,11 +68,11 @@ public class OAuth2RegisteredClientStoreMapper {
                 .clientAuthenticationMethods(authenticationMethods ->
                         clientAuthenticationMethods.forEach(authenticationMethod -> authenticationMethods.add(
                                 OAuth2CommonMapper.resolveClientAuthenticationMethod(authenticationMethod))))
-                .authorizationGrantTypes((grantTypes) -> authorizationGrantTypes.forEach(
+                .authorizationGrantTypes(grantTypes -> authorizationGrantTypes.forEach(
                         grantType -> grantTypes.add(OAuth2CommonMapper.resolveAuthorizationGrantType(grantType))))
-                .redirectUris((uris) -> uris.addAll(redirectUris))
+                .redirectUris(uris -> uris.addAll(redirectUris))
                 .postLogoutRedirectUris((uris) -> uris.addAll(postLogoutRedirectUris))
-                .scopes((scopes) -> scopes.addAll(clientScopes));
+                .scopes(scopes -> scopes.addAll(clientScopes));
 
         Map<String, Object> clientSettingsMap = OAuth2CommonMapper.parseMap(client.getClientSettings());
         builder.clientSettings(ClientSettings.withSettings(clientSettingsMap).build());

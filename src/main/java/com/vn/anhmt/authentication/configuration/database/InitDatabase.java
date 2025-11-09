@@ -1,5 +1,7 @@
 package com.vn.anhmt.authentication.configuration.database;
 
+import static org.springframework.security.oauth2.core.oidc.OidcScopes.*;
+
 import com.vn.anhmt.authentication.entity.UserEntity;
 import com.vn.anhmt.authentication.repository.OAuth2RegisteredClientJpaRepository;
 import com.vn.anhmt.authentication.repository.UserRepository;
@@ -29,6 +31,7 @@ public class InitDatabase implements CommandLineRunner {
     public void run(String... args) {
         initUser();
         initRegisteredClient();
+        initRegisteredClientPKCE();
     }
 
     private void initUser() {
@@ -61,6 +64,40 @@ public class InitDatabase implements CommandLineRunner {
                 .redirectUri("https://oauthdebugger.com/debug")
                 .postLogoutRedirectUri("https://oauthdebugger.com/debug")
                 .scope("openid")
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofHours(1))
+                        .refreshTokenTimeToLive(Duration.ofHours(2))
+                        .reuseRefreshTokens(false)
+                        .build())
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(true)
+                        .requireProofKey(false)
+                        .build())
+                .clientIdIssuedAt(Instant.now())
+                .build();
+
+        oauth2RegisteredClientJpaRepository.save(OAuth2RegisteredClientStoreMapper.toEntity(registeredClient1));
+    }
+
+    private void initRegisteredClientPKCE() {
+        final var registeredClient = oauth2RegisteredClientJpaRepository.findByClientId("client-pkce");
+
+        if (registeredClient.isPresent()) {
+            return;
+        }
+
+        RegisteredClient registeredClient1 = RegisteredClient.withId(String.valueOf(UUID.randomUUID()))
+                .clientId("client-pkce")
+                .clientSecret(passwordEncoder.encode("secret"))
+                .clientName("default-pkce")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("https://oauthdebugger.com/debug")
+                .postLogoutRedirectUri("https://oauthdebugger.com/debug")
+                .scope(OPENID)
+                .scope(EMAIL)
+                .scope(PROFILE)
                 .tokenSettings(TokenSettings.builder()
                         .accessTokenTimeToLive(Duration.ofHours(1))
                         .refreshTokenTimeToLive(Duration.ofHours(2))

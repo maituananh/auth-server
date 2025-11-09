@@ -1,6 +1,10 @@
 package com.vn.anhmt.authentication.store.mapper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.vn.anhmt.authentication.entity.OAuth2AuthorizationEntity;
+import java.time.Instant;
+import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -17,6 +21,12 @@ import org.springframework.util.StringUtils;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OAuth2AuthorizationStoreMapper {
 
+    private static final ObjectMapper objectMapper = OAuth2CommonMapper.getObjectMapper();
+
+    static {
+        objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
+    }
+
     public static OAuth2AuthorizationEntity toEntity(OAuth2Authorization authorization) {
         OAuth2AuthorizationEntity entity = new OAuth2AuthorizationEntity();
         entity.setId(authorization.getId());
@@ -31,7 +41,6 @@ public class OAuth2AuthorizationStoreMapper {
         OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode =
                 authorization.getToken(OAuth2AuthorizationCode.class);
         setTokenValues(
-                entity,
                 authorizationCode,
                 entity::setAuthorizationCodeValue,
                 entity::setAuthorizationCodeIssuedAt,
@@ -40,7 +49,6 @@ public class OAuth2AuthorizationStoreMapper {
 
         OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getToken(OAuth2AccessToken.class);
         setTokenValues(
-                entity,
                 accessToken,
                 entity::setAccessTokenValue,
                 entity::setAccessTokenIssuedAt,
@@ -54,7 +62,6 @@ public class OAuth2AuthorizationStoreMapper {
 
         OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken = authorization.getToken(OAuth2RefreshToken.class);
         setTokenValues(
-                entity,
                 refreshToken,
                 entity::setRefreshTokenValue,
                 entity::setRefreshTokenIssuedAt,
@@ -63,7 +70,6 @@ public class OAuth2AuthorizationStoreMapper {
 
         OAuth2Authorization.Token<OidcIdToken> oidcIdToken = authorization.getToken(OidcIdToken.class);
         setTokenValues(
-                entity,
                 oidcIdToken,
                 entity::setOidcIdTokenValue,
                 entity::setOidcIdTokenIssuedAt,
@@ -132,12 +138,11 @@ public class OAuth2AuthorizationStoreMapper {
     }
 
     private static void setTokenValues(
-            OAuth2AuthorizationEntity entity,
             OAuth2Authorization.Token<?> token,
-            java.util.function.Consumer<String> tokenValueConsumer,
-            java.util.function.Consumer<java.time.Instant> issuedAtConsumer,
-            java.util.function.Consumer<java.time.Instant> expiresAtConsumer,
-            java.util.function.Consumer<String> metadataConsumer) {
+            Consumer<String> tokenValueConsumer,
+            Consumer<Instant> issuedAtConsumer,
+            Consumer<Instant> expiresAtConsumer,
+            Consumer<String> metadataConsumer) {
         if (token != null) {
             OAuth2Token oAuth2Token = token.getToken();
             tokenValueConsumer.accept(oAuth2Token.getTokenValue());

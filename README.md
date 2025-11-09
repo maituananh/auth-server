@@ -13,3 +13,8 @@ curl --location 'http://localhost:8080/oauth2/token' \
 --data-urlencode 'grant_type=authorization_code' \
 --data-urlencode 'code=KQtM6gS3MS7bNDGeoYMn991ggBVo1bueCQOS4YRF2fa44svGyp9tosjHvDkPwlGHXxSTPk_202pIBkEoGQlOUhpMK-BGVhOQrCwwJYkDseIk2J8ymbzaSf7BZirV0RFt' \
 --data-urlencode 'redirect_uri=https://oauthdebugger.com/debug'
+
+how to create .pem file
+1. Generate the Private Key: openssl genrsa -out private_key.pem 2048
+2. Extract the Public Key: openssl rsa -in private_key.pem -pubout -out public_key.pem
+3. Optional (For enhanced security, you can encrypt the private key with a passphrase during generation. This requires entering a passphrase when prompted): Encrypting the Private Key: openssl genrsa -aes256 -out private_key_encrypted.pem 2048
