@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("login/oauth2/code/client")
-public class Oauth2Controller {
+@RequestMapping("api/test")
+public class Oauth2TestController {
 
     @GetMapping
     public String login() {

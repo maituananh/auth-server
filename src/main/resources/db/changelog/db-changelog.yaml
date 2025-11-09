@@ -1,3 +1,9 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changesets/01-create-users-table.yaml
+  - include:
+      file: db/changelog/changesets/02-create-oauth2-registered-client-table.yaml
+  - include:
+      file: db/changelog/changesets/03-create-oauth2-authorization-table.yaml
+  - include:
+      file: db/changelog/changesets/04-create-oauth2-authorization-consent-table.yaml
