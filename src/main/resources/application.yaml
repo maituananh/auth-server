@@ -32,6 +32,10 @@ spring:
     virtual:
       enabled: true
 
+rsa:
+  private-key: classpath:certs/private_key.pem
+  public-key: classpath:certs/public_key.pem
+
 logging:
   level:
     org.springframework.security.oauth2: DEBUG

@@ -38,7 +38,7 @@ public class OAuth2AuthorizationConsentStore implements OAuth2AuthorizationConse
                     if (registeredClient == null) {
                         throw new IllegalStateException("Registered client not found: " + registeredClientId);
                     }
-                    return OAuth2AuthorizationConsentStoreMapper.toObject(entity, registeredClient);
+                    return OAuth2AuthorizationConsentStoreMapper.toObject(entity);
                 })
                 .orElse(null);
     }
