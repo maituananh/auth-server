@@ -1,6 +1,6 @@
 package com.vn.anhmt.authentication.configuration;
 
-import com.vn.anhmt.authentication.configuration.interceptor.InterceptorConfiguration;
+import com.vn.anhmt.authentication.store.OAuth2AuthorizationStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +18,6 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -29,11 +28,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfiguration {
 
     private static final String[] WHITE_LIST = {
-        "/api/auth/token", "/api/auth/refresh-token", "/v3/api-docs/**", "/swagger-ui/**", "/api-docs.yaml", "/api-docs"
+        "/v3/api-docs/**", "/swagger-ui/**", "/api-docs.yaml", "/api-docs",
     };
 
-    private final InterceptorConfiguration interceptorConfiguration;
+    //    private final InterceptorConfiguration interceptorConfiguration;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final OAuth2AuthorizationStore oAuth2AuthorizationStore;
 
     @Bean
     @Order(1)
@@ -41,11 +41,13 @@ public class SecurityConfiguration {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
+        authorizationServerConfigurer.tokenRevocationEndpoint(Customizer.withDefaults());
+
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(
-                        authorizationServerConfigurer,
-                        authorizationServer ->
-                                authorizationServer.oidc(Customizer.withDefaults()) // Enable OpenID Connect 1.0
+                        authorizationServerConfigurer, authorizationServer -> authorizationServer
+                                .oidc(Customizer.withDefaults())
+                                .authorizationService(oAuth2AuthorizationStore) // Enable OpenID Connect 1.0
                         )
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 // Redirect to the login page when not authenticated from the
@@ -68,8 +70,8 @@ public class SecurityConfiguration {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(interceptorConfiguration, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
