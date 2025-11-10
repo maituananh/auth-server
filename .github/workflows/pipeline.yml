@@ -9,47 +9,55 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
     steps:
       - name: Validate PR Title
-        uses: kontrolplane/pull-request-title-validator@v1.5.0 # Replace with your chosen action
+        uses: kontrolplane/pull-request-title-validator@v1.5.0
         with:
           types: "feat,fix,chore,docs,style,refactor,perf,test,build,ci"
-          scopes: ".*" # Allow any scope, or define specific ones
+          scopes: ".*"
+
   build:
     runs-on: ubuntu-24.04
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login Dockerhub
+      - name: Login Dockerhub (only on main)
+        if: github.ref == 'refs/heads/main'
         env:
-          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
-          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-          DOCKER_IMAGE_NAME: ${{secrets.DOCKER_IMAGE_NAME}}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
-      - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}:latest
+      - name: Build Docker image
+        run: |
+          IMAGE_TAG=${{ github.ref == 'refs/heads/main' && 'latest' || 'pr-build' }}
+          docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:$IMAGE_TAG
 
-      - name: Push to Dockerhub
-        run: docker push ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}:latest
+      - name: Push to Dockerhub (only on main)
+        if: github.ref == 'refs/heads/main'
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
 
   deploy:
     runs-on: self-hosted
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Pull Docker image
-        run: docker pull ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}:latest
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
 
       - name: Delete old container if existed
-        run: docker rm -f ${{secrets.DOCKER_CONTAINER_NAME}} || true
+        run: docker rm -f ${{ secrets.DOCKER_CONTAINER_NAME }} || true
 
       - name: Run Docker container
         run: |
-          docker run -d -p ${{secrets.SERVER_PORT}}:${{secrets.SERVER_PORT}} \
+          docker run -d -p ${{ secrets.SERVER_PORT }}:${{ secrets.SERVER_PORT }} \
             -e DB_HOST=${{ secrets.DB_HOST }} \
             -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            --name ${{secrets.DOCKER_CONTAINER_NAME}} ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_IMAGE_NAME}}
+            --name ${{ secrets.DOCKER_CONTAINER_NAME }} \
+            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
