@@ -1,12 +1,12 @@
 package com.vn.anhmt.authentication.configuration.custom.token;
 
+import static com.nimbusds.jwt.JWTClaimNames.SUBJECT;
 import static org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames.TOKEN_TYPE_HINT;
 
-import com.vn.anhmt.authentication.configuration.custom.user.UserDetailsCustom;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.stereotype.Component;
@@ -22,13 +22,15 @@ public class Oauth2TokenCustom implements OAuth2TokenCustomizer<JwtEncodingConte
         claims.put("client_id", context.getRegisteredClient().getClientId());
         claims.put(TOKEN_TYPE_HINT, context.getTokenType().getValue());
 
-        if (principal.getPrincipal() instanceof UserDetailsCustom user) {
-            claims.put("user_id", user.getId());
-            claims.put(
-                    "roles",
-                    user.getAuthorities().stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .toList());
+        OAuth2Authorization oAuth2Authorization = context.getAuthorization();
+
+        if (oAuth2Authorization != null) {
+            claims.put(SUBJECT, oAuth2Authorization.getPrincipalName());
+            //            claims.put(
+            //                    "roles",
+            //                    oAuth2Authorization.getAuthorities().stream()
+            //                            .map(GrantedAuthority::getAuthority)
+            //                            .toList());
         }
 
         context.getClaims().claims(c -> c.putAll(claims));

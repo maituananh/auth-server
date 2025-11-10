@@ -1,5 +1,6 @@
 package com.vn.anhmt.authentication.configuration.custom.user;
 
+import com.vn.anhmt.authentication.domain.User;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
@@ -54,5 +55,13 @@ public class UserDetailsCustom implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public static UserDetailsCustom toUserDetailsCustom(User user) {
+        return UserDetailsCustom.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .build();
     }
 }

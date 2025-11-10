@@ -83,3 +83,9 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+test {
+    testLogging {
+        events "failed", "passed", "skipped", "standardError", "standardOut", "started"
+    }
+}

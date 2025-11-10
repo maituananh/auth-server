@@ -6,13 +6,14 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import com.vn.anhmt.authentication.configuration.custom.user.UserDetailsCustom;
 import com.vn.anhmt.authentication.domain.User;
 import com.vn.anhmt.authentication.helper.TokenHelper;
-import com.vn.anhmt.authentication.store.TokenStore;
+import com.vn.anhmt.authentication.store.OAuth2AuthorizationStore;
 import com.vn.anhmt.authentication.store.UserStore;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -27,36 +28,32 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class InterceptorConfiguration extends OncePerRequestFilter {
 
     private final UserStore userStore;
-    private final TokenStore tokenStore;
+    private final OAuth2AuthorizationStore oAuth2AuthorizationStore;
     private final TokenHelper tokenHelper;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(
+            HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = request.getHeader(AUTHORIZATION);
+        String tokenWithoutBearer = StringUtils.removeStart(token, TOKEN_PREFIX);
 
         if (StringUtils.isEmpty(token)) {
             doFilter(request, response, filterChain);
             return;
         }
 
-        token = token.replace(TOKEN_PREFIX, "");
+        validAccessToken(tokenWithoutBearer);
 
-        if (!tokenHelper.extractTokenType(token).equals(OAuth2TokenType.ACCESS_TOKEN.getValue())) {
+        String username = tokenHelper.extractUsername(tokenWithoutBearer);
+
+        if (StringUtils.isEmpty(username)) {
             throw new BadCredentialsException("Invalid token");
         }
 
-        validAccessToken(token);
-
-        String username = tokenHelper.extractUsername(token);
-
-        if (StringUtils.isEmpty(username)) {
-            return;
-        }
-
-        User user = userStore.findByUsername(username).orElseThrow();
-        UserDetailsCustom userDetailsCustom = toUserDetailsCustom(user);
+        User user = getUserByUsername(username);
+        UserDetailsCustom userDetailsCustom = UserDetailsCustom.toUserDetailsCustom(user);
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userDetailsCustom, null, userDetailsCustom.getAuthorities());
@@ -66,17 +63,15 @@ public class InterceptorConfiguration extends OncePerRequestFilter {
         doFilter(request, response, filterChain);
     }
 
-    private UserDetailsCustom toUserDetailsCustom(User user) {
-        return UserDetailsCustom.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .build();
+    private void validAccessToken(final String accessToken) {
+        final var oauth2 = oAuth2AuthorizationStore.findByToken(accessToken, OAuth2TokenType.ACCESS_TOKEN);
+
+        if (oauth2 == null) {
+            throw new BadCredentialsException("Token was expired %s".formatted(accessToken));
+        }
     }
 
-    private void validAccessToken(final String accessToken) {
-        tokenStore.findByAccessToken(accessToken).ifPresent(tokenEntity -> {
-            throw new BadCredentialsException("Token was expired %s".formatted(tokenEntity.getAccessToken()));
-        });
+    private User getUserByUsername(final String username) {
+        return userStore.findByUsername(username).orElseThrow();
     }
 }

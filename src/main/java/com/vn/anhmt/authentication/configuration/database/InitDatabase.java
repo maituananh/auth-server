@@ -58,7 +58,7 @@ public class InitDatabase implements CommandLineRunner {
                 .clientId("client")
                 .clientSecret(passwordEncoder.encode("secret"))
                 .clientName("default")
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .redirectUri("https://oauthdebugger.com/debug")
