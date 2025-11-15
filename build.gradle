@@ -40,6 +40,10 @@ compileJava {
     dependsOn(tasks.spotlessApply)
 }
 
+tasks.build {
+    dependsOn(tasks.check, "test")
+}
+
 tasks.check {
     dependsOn(tasks.spotlessCheck)
 }

@@ -1,11 +1,14 @@
 spring:
   main:
     allow-bean-definition-overriding: true
+  # Datasource config is provided by @DynamicPropertySource in BaseIntegrationTest
   datasource:
-    url: jdbc:postgresql://localhost:5432/authentication
-    username: test
-    password: test
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    hikari:
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      connection-timeout: 60000
+      maximum-pool-size: 5
+      minimum-idle: 1
   liquibase:
     change-log: classpath:db/changelog/db-changelog.yaml
     enabled: true
@@ -17,11 +20,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-  data:
-    redis:
-      username: redis
-      password: redis
-      host: localhost
+  # Redis config is provided by @DynamicPropertySource in BaseIntegrationTest
+  # data:
+  #   redis:
+  #     host: localhost
+  #     port: 6379
 
   threads:
     virtual:
