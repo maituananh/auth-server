@@ -44,6 +44,34 @@ tasks.check {
     dependsOn(tasks.spotlessCheck)
 }
 
+sourceSets {
+    generated {
+        java {
+            srcDirs = ['build/generated-sources/java']
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
+    }
+
+    integrationTest {
+        java {
+            srcDirs = ['src/integrationTest/java']
+        }
+        resources {
+            srcDirs = ['src/integrationTest/resources']
+        }
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
 dependencies {
     // web
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -74,18 +102,42 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    testImplementation 'org.apiguardian:apiguardian-api:1.1.2'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers:3.5.7'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'com.redis.testcontainers:testcontainers-redis:1.6.4'
 }
 
-tasks.named('test') {
+// Task to run only unit tests
+tasks.register('unitTest', Test) {
+    description = 'Runs unit tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform()
-}
-
-test {
     testLogging {
         events "failed", "passed", "skipped", "standardError", "standardOut", "started"
     }
+}
+
+// Task to run only integration tests
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter unitTest
+    testLogging {
+        events "failed", "passed", "skipped", "standardError", "standardOut", "started"
+    }
+}
+
+// Main test task runs both unit and integration tests
+tasks.named('test') {
+    description = 'Runs all tests (unit + integration).'
+    dependsOn unitTest, integrationTest
+    // Disable default test execution since we delegate to unitTest and integrationTest
+    enabled = false
 }
