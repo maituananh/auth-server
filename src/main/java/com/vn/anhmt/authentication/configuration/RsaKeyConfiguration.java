@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 
 @Configuration
 @RequiredArgsConstructor
@@ -39,6 +41,11 @@ public class RsaKeyConfiguration {
                 .build();
 
         return new ImmutableJWKSet<>(new JWKSet(rsaKey));
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
     @Bean

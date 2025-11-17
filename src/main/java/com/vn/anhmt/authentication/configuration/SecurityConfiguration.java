@@ -2,6 +2,7 @@ package com.vn.anhmt.authentication.configuration;
 
 import com.vn.anhmt.authentication.configuration.interceptor.InterceptorConfiguration;
 import com.vn.anhmt.authentication.store.OAuth2AuthorizationStore;
+import com.vn.anhmt.authentication.store.OAuth2RegisteredClientStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,7 @@ public class SecurityConfiguration {
     private final InterceptorConfiguration interceptorConfiguration;
     private final CorsConfigurationSource corsConfigurationSource;
     private final OAuth2AuthorizationStore oAuth2AuthorizationStore;
+    private final OAuth2RegisteredClientStore oAuth2RegisteredClientStore;
 
     @Bean
     @Order(1)
@@ -43,12 +45,12 @@ public class SecurityConfiguration {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
-        authorizationServerConfigurer.tokenRevocationEndpoint(Customizer.withDefaults());
-
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, authorizationServer -> authorizationServer
-                        .oidc(Customizer.withDefaults())
-                        .authorizationService(oAuth2AuthorizationStore))
+                        .registeredClientRepository(oAuth2RegisteredClientStore)
+                        .authorizationService(oAuth2AuthorizationStore)
+                        .tokenRevocationEndpoint(Customizer.withDefaults())
+                        .oidc(Customizer.withDefaults()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(WHITE_LIST)
                         .permitAll()
