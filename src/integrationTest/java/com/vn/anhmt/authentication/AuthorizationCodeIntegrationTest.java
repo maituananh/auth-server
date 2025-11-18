@@ -5,15 +5,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.vn.anhmt.authentication.repository.OAuth2RegisteredClientJpaRepository;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -22,12 +19,6 @@ class AuthorizationCodeIntegrationTest extends BaseIntegrationTest {
     private static final String CLIENT_ID = "client";
     private static final String CLIENT_SECRET = "secret";
     private static final String REDIRECT_URI = "https://oauthdebugger.com/debug";
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private OAuth2RegisteredClientJpaRepository oauth2RegisteredClientJpaRepository;
 
     @Test
     @WithMockUser(username = "admin", roles = "admin")

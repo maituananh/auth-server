@@ -8,7 +8,7 @@ on:
     branches: [ "*" ]
 
 jobs:
-  validate:
+  validate-pull-request:
     runs-on: ubuntu-24.04
     if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
     steps:
@@ -18,8 +18,23 @@ jobs:
           types: "feat,fix,chore,docs,style,refactor,perf,test,build,ci"
           scopes: ".*"
 
+  check-test:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    container:
+      image: docker:latest
+      options: --privileged
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: apk add openjdk21
+      - run: ./gradlew spotlessCheck
+      - run: ./gradlew test
+
   build:
     runs-on: ubuntu-24.04
+    needs: check-test
     if: |
       (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main')

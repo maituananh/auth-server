@@ -5,6 +5,7 @@ WORKDIR /app
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle gradle/
 COPY src ./src
+# Build without tests - run tests separately where Docker is available
 RUN ./gradlew clean build -x test
 
 FROM eclipse-temurin:21-jre-alpine-3.22
