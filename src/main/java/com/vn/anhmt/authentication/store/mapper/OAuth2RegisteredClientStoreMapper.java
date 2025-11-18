@@ -1,10 +1,7 @@
 package com.vn.anhmt.authentication.store.mapper;
 
 import com.vn.anhmt.authentication.entity.Oauth2RegisteredClientEntity;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -30,7 +27,6 @@ public class OAuth2RegisteredClientStoreMapper {
                 .forEach(authorizationGrantType -> authorizationGrantTypes.add(authorizationGrantType.getValue()));
 
         Oauth2RegisteredClientEntity entity = new Oauth2RegisteredClientEntity();
-        entity.setId(registeredClient.getId());
         entity.setClientId(registeredClient.getClientId());
         entity.setClientIdIssuedAt(registeredClient.getClientIdIssuedAt());
         entity.setClientSecret(registeredClient.getClientSecret());
@@ -59,7 +55,7 @@ public class OAuth2RegisteredClientStoreMapper {
         Set<String> postLogoutRedirectUris = StringUtils.commaDelimitedListToSet(client.getPostLogoutRedirectUris());
         Set<String> clientScopes = StringUtils.commaDelimitedListToSet(client.getScopes());
 
-        RegisteredClient.Builder builder = RegisteredClient.withId(client.getId())
+        RegisteredClient.Builder builder = RegisteredClient.withId(String.valueOf(client.getId()))
                 .clientId(client.getClientId())
                 .clientIdIssuedAt(client.getClientIdIssuedAt())
                 .clientSecret(client.getClientSecret())

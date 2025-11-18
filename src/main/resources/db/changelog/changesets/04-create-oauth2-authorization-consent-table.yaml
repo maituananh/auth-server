@@ -8,7 +8,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: registered_client_id
-                  type: varchar(100)
+                  type: uuid
                   constraints:
                     nullable: false
               - column:
@@ -25,3 +25,12 @@ databaseChangeLog:
             tableName: oauth2_authorization_consent
             columnNames: registered_client_id, principal_name
             constraintName: pk_oauth2_authorization_consent
+        - createIndex:
+            clustered: false
+            columns:
+              - column:
+                  name: registered_client_id
+            indexName: idx_oauth2_authorization_consent_registered_client_id
+            schemaName: public
+            tableName: oauth2_authorization_consent
+            unique: false

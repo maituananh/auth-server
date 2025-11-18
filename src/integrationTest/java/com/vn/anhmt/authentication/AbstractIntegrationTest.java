@@ -1,6 +1,8 @@
 package com.vn.anhmt.authentication;
 
 import com.redis.testcontainers.RedisContainer;
+import org.testcontainers.DockerClientFactory;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -25,9 +27,30 @@ public abstract class AbstractIntegrationTest {
                 .withReuse(true);
         REDIS_CONTAINER.start();
 
-        // Ensure containers are not stopped when JVM exits
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            // Do nothing - keep containers running for reuse
+            removeContainer(POSTGRES_CONTAINER);
+            removeContainer(REDIS_CONTAINER);
         }));
+    }
+
+    private static void removeContainer(GenericContainer<?> container) {
+        if (container == null) return;
+
+        try {
+            String containerId = container.getContainerId();
+
+            if (container.isRunning()) {
+                container.stop(); // 🛑 stop
+            }
+
+            DockerClientFactory.instance()
+                    .client()
+                    .removeContainerCmd(containerId)
+                    .withForce(true)
+                    .withRemoveVolumes(true)
+                    .exec();
+
+        } catch (Exception e) {
+        }
     }
 }

@@ -2,13 +2,14 @@ package com.vn.anhmt.authentication.repository;
 
 import com.vn.anhmt.authentication.entity.OAuth2AuthorizationEntity;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface OAuth2AuthorizationJpaRepository extends JpaRepository<OAuth2AuthorizationEntity, String> {
+public interface OAuth2AuthorizationJpaRepository extends JpaRepository<OAuth2AuthorizationEntity, UUID> {
 
     Optional<OAuth2AuthorizationEntity> findByState(String state);
 

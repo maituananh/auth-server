@@ -3,6 +3,7 @@ package com.vn.anhmt.authentication.store;
 import com.vn.anhmt.authentication.entity.OAuth2AuthorizationConsentEntity;
 import com.vn.anhmt.authentication.repository.OAuth2AuthorizationConsentJpaRepository;
 import com.vn.anhmt.authentication.store.mapper.OAuth2AuthorizationConsentStoreMapper;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
@@ -26,13 +27,13 @@ public class OAuth2AuthorizationConsentStore implements OAuth2AuthorizationConse
     @Override
     public void remove(OAuth2AuthorizationConsent authorizationConsent) {
         authorizationConsentRepository.deleteByRegisteredClientIdAndPrincipalName(
-                authorizationConsent.getRegisteredClientId(), authorizationConsent.getPrincipalName());
+                UUID.fromString(authorizationConsent.getRegisteredClientId()), authorizationConsent.getPrincipalName());
     }
 
     @Override
     public OAuth2AuthorizationConsent findById(String registeredClientId, String principalName) {
         return authorizationConsentRepository
-                .findByRegisteredClientIdAndPrincipalName(registeredClientId, principalName)
+                .findByRegisteredClientIdAndPrincipalName(UUID.fromString(registeredClientId), principalName)
                 .map(entity -> {
                     RegisteredClient registeredClient = registeredClientRepository.findById(registeredClientId);
                     if (registeredClient == null) {

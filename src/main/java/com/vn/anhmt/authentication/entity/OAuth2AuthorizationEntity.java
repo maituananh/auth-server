@@ -2,6 +2,7 @@ package com.vn.anhmt.authentication.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 
 @Table(name = "oauth2_authorization")
@@ -14,10 +15,11 @@ import lombok.*;
 public class OAuth2AuthorizationEntity {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(name = "registered_client_id", nullable = false)
-    private String registeredClientId;
+    private UUID registeredClientId;
 
     @Column(name = "principal_name", nullable = false)
     private String principalName;

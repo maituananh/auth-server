@@ -2,13 +2,17 @@ package com.vn.anhmt.authentication.store;
 
 import com.vn.anhmt.authentication.entity.OAuth2AuthorizationEntity;
 import com.vn.anhmt.authentication.repository.OAuth2AuthorizationJpaRepository;
+import com.vn.anhmt.authentication.repository.OAuth2RegisteredClientJpaRepository;
 import com.vn.anhmt.authentication.store.mapper.OAuth2AuthorizationStoreMapper;
+import com.vn.anhmt.authentication.store.mapper.OAuth2RegisteredClientStoreMapper;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OAuth2AuthorizationStore implements OAuth2AuthorizationService {
 
     private final OAuth2AuthorizationJpaRepository authorizationRepository;
-    private final RegisteredClientRepository registeredClientRepository;
+    private final OAuth2RegisteredClientJpaRepository registeredClientRepository;
 
     @Transactional
     @Override
@@ -30,16 +34,23 @@ public class OAuth2AuthorizationStore implements OAuth2AuthorizationService {
     @Transactional
     @Override
     public void remove(OAuth2Authorization authorization) {
-        authorizationRepository.deleteById(authorization.getId());
+        authorizationRepository.deleteById(UUID.fromString(authorization.getId()));
     }
 
     @Override
     public OAuth2Authorization findById(String id) {
-        return authorizationRepository.findById(id).map(this::toObject).orElse(null);
+        return authorizationRepository
+                .findById(UUID.fromString(id))
+                .map(this::toObject)
+                .orElse(null);
     }
 
     @Override
     public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
+        if (token == null) {
+            throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST);
+        }
+
         if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
             return findByAccessToken(token);
         }
@@ -84,10 +95,12 @@ public class OAuth2AuthorizationStore implements OAuth2AuthorizationService {
     }
 
     private OAuth2Authorization toObject(OAuth2AuthorizationEntity entity) {
-        var registeredClient = registeredClientRepository.findById(entity.getRegisteredClientId());
-        if (registeredClient == null) {
-            throw new IllegalStateException("Registered client not found: " + entity.getRegisteredClientId());
-        }
+        var registeredClient = registeredClientRepository
+                .findById(entity.getRegisteredClientId())
+                .map(OAuth2RegisteredClientStoreMapper::toRegisteredClient)
+                .orElseThrow(() ->
+                        new IllegalStateException("Registered client not found: " + entity.getRegisteredClientId()));
+
         return OAuth2AuthorizationStoreMapper.toObject(entity, registeredClient);
     }
 }
