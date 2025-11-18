@@ -2,6 +2,7 @@ package com.vn.anhmt.authentication.store;
 
 import com.vn.anhmt.authentication.repository.OAuth2RegisteredClientJpaRepository;
 import com.vn.anhmt.authentication.store.mapper.OAuth2RegisteredClientStoreMapper;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -20,7 +21,9 @@ public class OAuth2RegisteredClientStore implements RegisteredClientRepository {
 
     @Override
     public RegisteredClient findById(String id) {
-        final var entity = oauth2RegisteredClientJpaRepository.findById(id).orElseThrow();
+        final var entity = oauth2RegisteredClientJpaRepository
+                .findById(UUID.fromString(id))
+                .orElseThrow();
 
         return OAuth2RegisteredClientStoreMapper.toRegisteredClient(entity);
     }

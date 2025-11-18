@@ -8,10 +8,11 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: varchar(100)
+                  type: uuid
+                  defaultValueComputed: uuidv7()
                   constraints:
-                    nullable: false
                     primaryKey: true
+                    nullable: false
               - column:
                   name: client_id
                   type: varchar(100)

@@ -24,7 +24,6 @@ public class RedisConfiguration {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
 
-        // ====== Serializer cho key và value ======
         RedisSerializationContext.SerializationPair<String> keySerializer =
                 RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer());
 
@@ -35,23 +34,20 @@ public class RedisConfiguration {
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(keySerializer)
                 .serializeValuesWith(valueSerializer)
-                .disableCachingNullValues() // Không cache null
-                .prefixCacheNameWith("app::") // Prefix cho tất cả cache
-                .entryTtl(Duration.ofHours(1)); // TTL mặc định 1h
+                .disableCachingNullValues()
+                .entryTtl(Duration.ofHours(1));
 
-        // ====== TTL cho từng cache cụ thể ======
         Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
         cacheConfigs.put("users", defaultConfig.entryTtl(Duration.ofMinutes(10)));
         cacheConfigs.put("products", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         cacheConfigs.put("sessions", defaultConfig.entryTtl(Duration.ofHours(6)));
         cacheConfigs.put("permissions", defaultConfig.entryTtl(Duration.ofDays(1)));
 
-        // ====== Build RedisCacheManager ======
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(cacheConfigs)
-                .transactionAware() // tôn trọng transaction Spring
-                .enableStatistics() // bật metrics (nếu Spring Actuator)
+                .transactionAware()
+                .enableStatistics()
                 .build();
     }
 

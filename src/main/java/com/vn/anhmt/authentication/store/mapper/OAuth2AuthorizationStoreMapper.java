@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.vn.anhmt.authentication.entity.OAuth2AuthorizationEntity;
 import java.time.Instant;
+import java.util.UUID;
 import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -29,8 +30,7 @@ public class OAuth2AuthorizationStoreMapper {
 
     public static OAuth2AuthorizationEntity toEntity(OAuth2Authorization authorization) {
         OAuth2AuthorizationEntity entity = new OAuth2AuthorizationEntity();
-        entity.setId(authorization.getId());
-        entity.setRegisteredClientId(authorization.getRegisteredClientId());
+        entity.setRegisteredClientId(UUID.fromString(authorization.getRegisteredClientId()));
         entity.setPrincipalName(authorization.getPrincipalName());
         entity.setAuthorizationGrantType(
                 authorization.getAuthorizationGrantType().getValue());
@@ -84,7 +84,7 @@ public class OAuth2AuthorizationStoreMapper {
 
     public static OAuth2Authorization toObject(OAuth2AuthorizationEntity entity, RegisteredClient registeredClient) {
         OAuth2Authorization.Builder builder = OAuth2Authorization.withRegisteredClient(registeredClient);
-        builder.id(entity.getId());
+        builder.id(String.valueOf(entity.getId()));
         builder.principalName(entity.getPrincipalName());
         builder.authorizationGrantType(new AuthorizationGrantType(entity.getAuthorizationGrantType()));
         builder.authorizedScopes(StringUtils.commaDelimitedListToSet(entity.getAuthorizedScopes()));

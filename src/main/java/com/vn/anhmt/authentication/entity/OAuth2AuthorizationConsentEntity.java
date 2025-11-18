@@ -2,6 +2,7 @@ package com.vn.anhmt.authentication.entity;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.util.UUID;
 import lombok.*;
 
 @Table(name = "oauth2_authorization_consent")
@@ -16,7 +17,7 @@ public class OAuth2AuthorizationConsentEntity {
 
     @Id
     @Column(name = "registered_client_id", nullable = false)
-    private String registeredClientId;
+    private UUID registeredClientId;
 
     @Id
     @Column(name = "principal_name", nullable = false)

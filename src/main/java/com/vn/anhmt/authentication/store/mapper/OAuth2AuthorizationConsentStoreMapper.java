@@ -2,6 +2,7 @@ package com.vn.anhmt.authentication.store.mapper;
 
 import com.vn.anhmt.authentication.entity.OAuth2AuthorizationConsentEntity;
 import java.util.Set;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,7 +15,7 @@ public class OAuth2AuthorizationConsentStoreMapper {
 
     public static OAuth2AuthorizationConsentEntity toEntity(OAuth2AuthorizationConsent authorizationConsent) {
         OAuth2AuthorizationConsentEntity entity = new OAuth2AuthorizationConsentEntity();
-        entity.setRegisteredClientId(authorizationConsent.getRegisteredClientId());
+        entity.setRegisteredClientId(UUID.fromString(authorizationConsent.getRegisteredClientId()));
         entity.setPrincipalName(authorizationConsent.getPrincipalName());
 
         Set<String> authorities = authorizationConsent.getAuthorities().stream()
@@ -28,7 +29,7 @@ public class OAuth2AuthorizationConsentStoreMapper {
     public static OAuth2AuthorizationConsent toObject(OAuth2AuthorizationConsentEntity entity) {
         String principalName = entity.getPrincipalName();
         OAuth2AuthorizationConsent.Builder builder =
-                OAuth2AuthorizationConsent.withId(entity.getRegisteredClientId(), principalName);
+                OAuth2AuthorizationConsent.withId(String.valueOf(entity.getRegisteredClientId()), principalName);
 
         if (entity.getAuthorities() != null) {
             for (String authority : StringUtils.commaDelimitedListToSet(entity.getAuthorities())) {
