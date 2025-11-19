@@ -76,6 +76,11 @@ sourceSets {
     }
 }
 
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 dependencies {
     // web
     implementation 'org.springframework.boot:spring-boot-starter-web'
