@@ -2,6 +2,7 @@ package com.vn.anhmt.authentication;
 
 import com.redis.testcontainers.RedisContainer;
 import com.vn.anhmt.authentication.configuration.RestTestConfiguration;
+import com.vn.anhmt.authentication.repository.OAuth2AuthorizationJpaRepository;
 import com.vn.anhmt.authentication.repository.OAuth2RegisteredClientJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -44,6 +45,9 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     protected OAuth2RegisteredClientJpaRepository oauth2RegisteredClientJpaRepository;
+
+    @Autowired
+    protected OAuth2AuthorizationJpaRepository oauth2AuthorizationJpaRepository;
 
     protected ObjectMapper objectMapper = new ObjectMapper();
 
