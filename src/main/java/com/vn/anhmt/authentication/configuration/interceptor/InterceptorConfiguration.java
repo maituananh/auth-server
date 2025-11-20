@@ -13,6 +13,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -46,13 +47,13 @@ public class InterceptorConfiguration extends OncePerRequestFilter {
 
         validAccessToken(tokenWithoutBearer);
 
-        String username = tokenHelper.extractUsername(tokenWithoutBearer);
+        final var userId = tokenHelper.extractUserId(tokenWithoutBearer);
 
-        if (StringUtils.isEmpty(username)) {
+        if (userId == null) {
             throw new BadCredentialsException("Invalid token");
         }
 
-        User user = getUserByUsername(username);
+        User user = getUserById(userId);
         UserDetailsCustom userDetailsCustom = UserDetailsCustom.toUserDetailsCustom(user);
 
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -71,7 +72,7 @@ public class InterceptorConfiguration extends OncePerRequestFilter {
         }
     }
 
-    private User getUserByUsername(final String username) {
-        return userStore.findByUsername(username).orElseThrow();
+    private User getUserById(final UUID id) {
+        return userStore.findById(id).orElseThrow();
     }
 }
