@@ -147,6 +147,12 @@ To run tests, run the following command
 
 ## Support
 
+Redis: no-password for default
+
+1. Access container: docker exec -it redis redis-cli
+2. ACL LIST -> see: nopass
+3. Set new password for Redis: ACL SETUSER default on >[mypassword] allcommands allkeys
+
 For support, email maituananh12061998@gmail.com
 
 
