@@ -10,6 +10,7 @@ import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class TokenHelper {
     public static final String TOKEN_PREFIX = "Bearer ";
     public static final String TOKEN_TYPE_HINT = "token_type_hint";
     public static final String TOKEN_ID = "jti";
+    public static final String USER_ID = "user_id";
 
     private final KeyPair keyPair;
 
@@ -39,6 +41,10 @@ public class TokenHelper {
 
     public String extractUsername(String token) {
         return (String) extractClaims(token).get(SUBJECT);
+    }
+
+    public UUID extractUserId(String token) {
+        return UUID.fromString((String) extractClaims(token).get(USER_ID));
     }
 
     public String extractTokenId(String token) {
