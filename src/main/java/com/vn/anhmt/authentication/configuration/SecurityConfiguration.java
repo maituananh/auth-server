@@ -3,6 +3,7 @@ package com.vn.anhmt.authentication.configuration;
 import com.vn.anhmt.authentication.configuration.interceptor.InterceptorConfiguration;
 import com.vn.anhmt.authentication.store.OAuth2AuthorizationStore;
 import com.vn.anhmt.authentication.store.OAuth2RegisteredClientStore;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +17,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationContext;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -42,6 +47,13 @@ public class SecurityConfiguration {
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        Function<OidcUserInfoAuthenticationContext, OidcUserInfo> userInfoMapper = context -> {
+            OidcUserInfoAuthenticationToken authentication = context.getAuthentication();
+            JwtAuthenticationToken principal = (JwtAuthenticationToken) authentication.getPrincipal();
+
+            return new OidcUserInfo(principal.getToken().getClaims());
+        };
+
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
@@ -50,7 +62,7 @@ public class SecurityConfiguration {
                         .registeredClientRepository(oAuth2RegisteredClientStore)
                         .authorizationService(oAuth2AuthorizationStore)
                         .tokenRevocationEndpoint(Customizer.withDefaults())
-                        .oidc(Customizer.withDefaults()))
+                        .oidc(oidc -> oidc.userInfoEndpoint(userInfo -> userInfo.userInfoMapper(userInfoMapper))))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(WHITE_LIST)
                         .permitAll()
