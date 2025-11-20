@@ -5,7 +5,12 @@ import static org.springframework.security.oauth2.core.endpoint.OAuth2ParameterN
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
@@ -16,21 +21,30 @@ public class Oauth2TokenCustom implements OAuth2TokenCustomizer<JwtEncodingConte
 
     @Override
     public void customize(final JwtEncodingContext context) {
-        Authentication principal = context.getPrincipal();
-
         Map<String, Object> claims = new HashMap<>();
         claims.put("client_id", context.getRegisteredClient().getClientId());
         claims.put(TOKEN_TYPE_HINT, context.getTokenType().getValue());
 
+        Authentication principal = context.getPrincipal();
+
+        if (Objects.equals(context.getTokenType().getValue(), "access_token")
+                && principal instanceof UsernamePasswordAuthenticationToken) {
+            Set<String> authorities = principal.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toSet());
+            context.getClaims().claim("authorities", authorities);
+
+            //            UserDetailsCustom user = (UserDetailsCustom) principal.getPrincipal();
+            //                    context.getClaims().claim("user", user);
+        }
+
         OAuth2Authorization oAuth2Authorization = context.getAuthorization();
 
         if (oAuth2Authorization != null) {
-            claims.put(SUBJECT, oAuth2Authorization.getPrincipalName());
-            //            claims.put(
-            //                    "roles",
-            //                    oAuth2Authorization.getAuthorities().stream()
-            //                            .map(GrantedAuthority::getAuthority)
-            //                            .toList());
+            String principalName = oAuth2Authorization.getPrincipalName();
+
+            claims.put(SUBJECT, principalName);
+            claims.put("register_client_id", oAuth2Authorization.getRegisteredClientId());
         }
 
         context.getClaims().claims(c -> c.putAll(claims));

@@ -21,6 +21,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @EnableCaching
 public class RedisConfiguration {
 
+    public static final String USERS_CACHE_KEY = "users";
+    public static final String CLIENTS_CACHE_KEY = "clients";
+
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
 
@@ -38,10 +41,8 @@ public class RedisConfiguration {
                 .entryTtl(Duration.ofHours(1));
 
         Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
-        cacheConfigs.put("users", defaultConfig.entryTtl(Duration.ofMinutes(10)));
-        cacheConfigs.put("products", defaultConfig.entryTtl(Duration.ofMinutes(30)));
-        cacheConfigs.put("sessions", defaultConfig.entryTtl(Duration.ofHours(6)));
-        cacheConfigs.put("permissions", defaultConfig.entryTtl(Duration.ofDays(1)));
+        cacheConfigs.put(USERS_CACHE_KEY, defaultConfig.entryTtl(Duration.ofHours(1)));
+        cacheConfigs.put(CLIENTS_CACHE_KEY, defaultConfig.entryTtl(Duration.ofHours(1)));
 
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(defaultConfig)

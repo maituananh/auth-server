@@ -1,7 +1,7 @@
 package com.vn.anhmt.authentication.configuration.custom.user;
 
-import com.vn.anhmt.authentication.entity.UserEntity;
-import com.vn.anhmt.authentication.repository.UserRepository;
+import com.vn.anhmt.authentication.domain.User;
+import com.vn.anhmt.authentication.store.UserStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,17 +12,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserDetailsServiceCustom implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UserStore userStore;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity userEntity =
-                userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+        User user = userStore.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
 
         return UserDetailsCustom.builder()
-                .id(userEntity.getId())
-                .username(userEntity.getUsername())
-                .password(userEntity.getPassword())
+                .id(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
                 .build();
     }
 }
